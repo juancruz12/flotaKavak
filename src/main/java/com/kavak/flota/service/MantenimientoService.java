@@ -44,6 +44,11 @@ public class MantenimientoService {
                 .build();
 
         Mantenimiento mantenimientoGuardado = mantenimientoRepository.save(mantenimiento);
+
+        // ⚡ Actualizar disponibilidad del vehículo y guardarlo explícitamente
+        vehiculo.actualizarDisponibilidad();
+        vehiculoRepository.save(vehiculo);
+
         return mapper.mantenimientoToDTO(mantenimientoGuardado);
     }
 
@@ -64,6 +69,34 @@ public class MantenimientoService {
     @Transactional(readOnly = true)
     public List<MantenimientoDTO> obtenerPorVehiculoPatente(String patente) {
         return mantenimientoRepository.findByVehiculoPatente(patente)
+                .stream()
+                .map(mapper::mantenimientoToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtener todos los mantenimientos activos de un vehículo por ID
+     * Mantenimientos activos: PENDIENTE, EN_PROCESO (definidos en Estado.getEstadosActivos())
+     */
+    @Transactional(readOnly = true)
+    public List<MantenimientoDTO> obtenerMantenimientosActivosPorVehiculo(Long vehiculoId) {
+        return mantenimientoRepository.findMantenimientosActivosPorVehiculo(
+                        vehiculoId,
+                        Estado.getEstadosActivos())
+                .stream()
+                .map(mapper::mantenimientoToDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtener todos los mantenimientos activos de un vehículo por patente
+     * Mantenimientos activos: PENDIENTE, EN_PROCESO (definidos en Estado.getEstadosActivos())
+     */
+    @Transactional(readOnly = true)
+    public List<MantenimientoDTO> obtenerMantenimientosActivosPorPatente(String patente) {
+        return mantenimientoRepository.findMantenimientosActivosPorPatente(
+                        patente,
+                        Estado.getEstadosActivos())
                 .stream()
                 .map(mapper::mantenimientoToDTO)
                 .collect(Collectors.toList());
@@ -103,6 +136,13 @@ public class MantenimientoService {
 
         mantenimientoRepository.save(mantenimiento);
 
+        // ⚡ Actualizar disponibilidad del vehículo y guardarlo explícitamente
+        Vehiculo vehiculo = mantenimiento.getVehiculo();
+        if (vehiculo != null) {
+            vehiculo.actualizarDisponibilidad();
+            vehiculoRepository.save(vehiculo); // Guardar cambio en disponibilidad
+        }
+
         return TransicionEstadoResponseDTO.builder()
                 .mantenimientoId(id)
                 .estadoAnterior(anteriorEstado)
@@ -116,7 +156,16 @@ public class MantenimientoService {
      * Eliminar mantenimiento por ID
      */
     public void eliminarMantenimiento(Long id) {
+        Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+
+        Vehiculo vehiculo = mantenimiento.getVehiculo();
         mantenimientoRepository.deleteById(id);
+
+        // ⚡ Actualizar disponibilidad del vehículo después de eliminar el mantenimiento
+        if (vehiculo != null) {
+            vehiculo.actualizarDisponibilidad();
+            vehiculoRepository.save(vehiculo);
+        }
     }
 }
-

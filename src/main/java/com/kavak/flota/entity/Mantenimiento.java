@@ -64,5 +64,14 @@ public class Mantenimiento {
     protected void onUpdate() {
         fechaActualizacion = LocalDateTime.now();
     }
+
+    @PostPersist
+    @PostUpdate
+    @PostRemove
+    protected void actualizarDisponibilidadVehiculo() {
+        if (vehiculo != null) {
+            vehiculo.actualizarDisponibilidad();
+        }
+    }
 }
 

@@ -30,6 +30,7 @@ public class Mapper {
                 .modelo(vehiculo.getModelo())
                 .anio(vehiculo.getAnio())
                 .kilometraje(vehiculo.getKilometraje())
+                .disponible(vehiculo.getDisponible())
                 .fechaCreacion(vehiculo.getFechaCreacion())
                 .fechaActualizacion(vehiculo.getFechaActualizacion())
                 .mantenimientos(mantenimientosDTO)
@@ -66,6 +67,7 @@ public class Mapper {
                 .modelo(dto.getModelo())
                 .anio(dto.getAnio())
                 .kilometraje(dto.getKilometraje())
+                .disponible(true)
                 .fechaCreacion(dto.getFechaCreacion())
                 .fechaActualizacion(dto.getFechaActualizacion())
                 .build();

@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +62,48 @@ public class VehiculoService {
         vehiculo.setKilometraje(nuevoKilometraje);
         Vehiculo vehiculoActualizado = vehiculoRepository.save(vehiculo);
         return mapper.vehiculoToDto(vehiculoActualizado);
+    }
+
+    /**
+     * Obtener todos los vehículos disponibles (sin mantenimientos activos)
+     */
+    @Transactional(readOnly = true)
+    public List<VehiculoDTO> obtenerVehiculosDisponibles() {
+        return vehiculoRepository.findByDisponibleTrue()
+                .stream()
+                .map(mapper::vehiculoToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Obtener todos los vehículos no disponibles (con mantenimientos activos)
+     */
+    @Transactional(readOnly = true)
+    public List<VehiculoDTO> obtenerVehiculosNoDisponibles() {
+        return vehiculoRepository.findByDisponibleFalse()
+                .stream()
+                .map(mapper::vehiculoToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Verificar si un vehículo está disponible por ID
+     */
+    @Transactional(readOnly = true)
+    public boolean verificarDisponibilidad(Long id) {
+        return vehiculoRepository.findById(id)
+                .map(Vehiculo::getDisponible)
+                .orElse(false);
+    }
+
+    /**
+     * Verificar si un vehículo está disponible por patente
+     */
+    @Transactional(readOnly = true)
+    public boolean verificarDisponibilidadPorPatente(String patente) {
+        return vehiculoRepository.findByPatente(patente)
+                .map(Vehiculo::getDisponible)
+                .orElse(false);
     }
 
     /**

@@ -2,6 +2,7 @@ package com.kavak.flota.enums;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public enum Estado {
@@ -40,6 +41,23 @@ public enum Estado {
      */
     public boolean esTerminal() {
         return this == COMPLETADO || this == CANCELADO;
+    }
+
+    /**
+     * Verifica si el estado es activo (no finalizado)
+     * @return true si es PENDIENTE o EN_PROCESO
+     */
+    public boolean esActivo() {
+        return this == PENDIENTE || this == EN_PROCESO;
+    }
+
+    /**
+     * Obtiene la lista de estados activos (no finalizados)
+     * Estados activos: PENDIENTE, EN_PROCESO
+     * @return Lista de estados activos
+     */
+    public static List<Estado> getEstadosActivos() {
+        return Arrays.asList(PENDIENTE, EN_PROCESO);
     }
 }
 

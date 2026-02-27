@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/vehiculos")
 @RequiredArgsConstructor
@@ -45,6 +47,36 @@ public class VehiculoController {
     }
 
     /**
+     * Obtener todos los vehículos disponibles (sin mantenimientos activos)
+     * GET /api/vehiculos/disponibles
+     */
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<VehiculoDTO>> obtenerVehiculosDisponibles() {
+        List<VehiculoDTO> vehiculos = vehiculoService.obtenerVehiculosDisponibles();
+        return ResponseEntity.ok(vehiculos);
+    }
+
+    /**
+     * Obtener todos los vehículos no disponibles (con mantenimientos activos)
+     * GET /api/vehiculos/no-disponibles
+     */
+    @GetMapping("/no-disponibles")
+    public ResponseEntity<List<VehiculoDTO>> obtenerVehiculosNoDisponibles() {
+        List<VehiculoDTO> vehiculos = vehiculoService.obtenerVehiculosNoDisponibles();
+        return ResponseEntity.ok(vehiculos);
+    }
+
+    /**
+     * Verificar disponibilidad de un vehículo
+     * GET /api/vehiculos/{id}/disponibilidad
+     */
+    @GetMapping("/{id}/disponibilidad")
+    public ResponseEntity<Boolean> verificarDisponibilidad(@PathVariable Long id) {
+        boolean disponible = vehiculoService.verificarDisponibilidad(id);
+        return ResponseEntity.ok(disponible);
+    }
+
+    /**
      * Actualizar kilometraje por ID o patente
      * PUT /api/vehiculos/kilometraje?id={id}&nuevoKilometraje={km}
      * o PUT /api/vehiculos/kilometraje?patente={patente}&nuevoKilometraje={km}
@@ -72,4 +104,3 @@ public class VehiculoController {
         return ResponseEntity.noContent().build();
     }
 }
-

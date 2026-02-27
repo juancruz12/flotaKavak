@@ -18,6 +18,7 @@ public class VehiculoDTO {
     private String modelo;
     private Integer anio;
     private Long kilometraje;
+    private Boolean disponible;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
     private List<MantenimientoDTO> mantenimientos;

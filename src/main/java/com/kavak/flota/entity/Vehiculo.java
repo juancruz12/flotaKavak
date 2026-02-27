@@ -35,6 +35,9 @@ public class Vehiculo {
     @Column(name = "kilometraje", nullable = false)
     private Long kilometraje;
 
+    @Column(name = "disponible", nullable = false)
+    private Boolean disponible = true;
+
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
@@ -43,6 +46,17 @@ public class Vehiculo {
 
     @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Mantenimiento> mantenimientos;
+
+    /**
+     * Actualiza la disponibilidad del vehículo basándose en sus mantenimientos activos
+     */
+    public void actualizarDisponibilidad() {
+        if (mantenimientos != null) {
+            boolean tieneMantenimientoActivo = mantenimientos.stream()
+                .anyMatch(m -> m.getEstado().esActivo());
+            this.disponible = !tieneMantenimientoActivo;
+        }
+    }
 
     @PrePersist
     protected void onCreate() {

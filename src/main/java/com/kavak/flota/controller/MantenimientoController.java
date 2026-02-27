@@ -40,6 +40,17 @@ public class MantenimientoController {
     }
 
     /**
+     * Obtener todos los mantenimientos ACTIVOS de un vehículo por ID
+     * Estados activos: PENDIENTE, EN_PROCESO
+     * GET /api/mantenimientos/vehiculo/{vehiculoId}/activos
+     */
+    @GetMapping("/vehiculo/{vehiculoId}/activos")
+    public ResponseEntity<List<MantenimientoDTO>> obtenerMantenimientosActivosPorVehiculo(
+            @PathVariable Long vehiculoId) {
+        return ResponseEntity.ok(mantenimientoService.obtenerMantenimientosActivosPorVehiculo(vehiculoId));
+    }
+
+    /**
      * Transicionar el estado de un mantenimiento
      * PUT /api/mantenimientos/{id}/transicionar?nuevoEstado={estado}
      *
