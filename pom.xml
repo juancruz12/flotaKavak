@@ -69,6 +69,33 @@
 	</dependencies>
 
 	<build>
+		<resources>
+			<!-- Filtrar application.properties pero NO application-prod.properties -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>application.properties</include>
+				</includes>
+				<filtering>true</filtering>
+			</resource>
+			<!-- Copiar application-prod.properties sin filtering -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>application-prod.properties</include>
+				</includes>
+				<filtering>false</filtering>
+			</resource>
+			<!-- Copiar otros recursos sin filtering -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>application.properties</exclude>
+					<exclude>application-prod.properties</exclude>
+				</excludes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
