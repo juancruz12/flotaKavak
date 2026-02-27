@@ -17,7 +17,7 @@ public class MantenimientoDTO {
     private Long kilometrajeEnMantenimiento;
     private String estado;
     private Double costoEstimado;
-    private Double costoReal;
+    private Double costoFinal;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 }

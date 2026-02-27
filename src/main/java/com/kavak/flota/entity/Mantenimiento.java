@@ -44,8 +44,8 @@ public class Mantenimiento {
     @Column(name = "costo_estimado", nullable = false)
     private Double costoEstimado;
 
-    @Column(name = "costo_real")
-    private Double costoReal;
+    @Column(name = "costo_final")
+    private Double costoFinal;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehiculo_id", nullable = false)

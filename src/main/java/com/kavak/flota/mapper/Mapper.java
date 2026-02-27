@@ -48,7 +48,7 @@ public class Mapper {
                 .kilometrajeEnMantenimiento(mantenimiento.getKilometrajeEnMantenimiento())
                 .estado(mantenimiento.getEstado().toString())
                 .costoEstimado(mantenimiento.getCostoEstimado())
-                .costoReal(mantenimiento.getCostoReal())
+                .costoFinal(mantenimiento.getCostoFinal())
                 .fechaCreacion(mantenimiento.getFechaCreacion())
                 .fechaActualizacion(mantenimiento.getFechaActualizacion())
                 .build();

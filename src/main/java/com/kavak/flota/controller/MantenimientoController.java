@@ -53,8 +53,9 @@ public class MantenimientoController {
     @PutMapping("/{id}/transicionar")
     public ResponseEntity<TransicionEstadoResponseDTO> transicionarEstado(
             @PathVariable Long id,
-            @RequestParam String nuevoEstado) {
-        return ResponseEntity.ok(mantenimientoService.transicionarEstado(id, nuevoEstado));
+            @RequestParam String nuevoEstado,
+            @RequestParam(required = false) Double costoFinal) {
+        return ResponseEntity.ok(mantenimientoService.transicionarEstado(id, nuevoEstado, costoFinal));
     }
 
     /**

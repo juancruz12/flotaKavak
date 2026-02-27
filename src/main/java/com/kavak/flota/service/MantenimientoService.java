@@ -39,7 +39,7 @@ public class MantenimientoService {
                 .kilometrajeEnMantenimiento(vehiculo.getKilometraje())
                 .estado(Estado.PENDIENTE)
                 .costoEstimado(mantenimientoDTO.getCostoEstimado())
-                .costoReal(mantenimientoDTO.getCostoReal())
+                .costoFinal(mantenimientoDTO.getCostoFinal())
                 .vehiculo(vehiculo)
                 .build();
 
@@ -83,7 +83,7 @@ public class MantenimientoService {
     /**
      * Transicionar el estado de un mantenimiento validando las reglas
      */
-    public TransicionEstadoResponseDTO transicionarEstado(Long id, String nuevoEstadoStr) {
+    public TransicionEstadoResponseDTO transicionarEstado(Long id, String nuevoEstadoStr, Double costoFinal) {
 
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
@@ -96,7 +96,12 @@ public class MantenimientoService {
 
         // Si la validación pasó, actualizar el estado
         mantenimiento.setEstado(nuevoEstado);
-        Mantenimiento mantenimientoActualizado = mantenimientoRepository.save(mantenimiento);
+
+        if(nuevoEstado.equals(Estado.COMPLETADO)) {
+            mantenimiento.setCostoFinal(costoFinal);
+        }
+
+        mantenimientoRepository.save(mantenimiento);
 
         return TransicionEstadoResponseDTO.builder()
                 .mantenimientoId(id)
@@ -105,18 +110,6 @@ public class MantenimientoService {
                 .mensaje("Transición exitosa de " + anteriorEstado +
                         " a " + nuevoEstadoStr)
                 .build();
-    }
-
-    /**
-     * Actualizar costo real de un mantenimiento
-     */
-    public MantenimientoDTO actualizarCostoReal(Long id, Double costoReal) {
-        Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
-
-        mantenimiento.setCostoReal(costoReal);
-        Mantenimiento mantenimientoActualizado = mantenimientoRepository.save(mantenimiento);
-        return mapper.mantenimientoToDTO(mantenimientoActualizado);
     }
 
     /**
