@@ -1,6 +1,7 @@
 package com.kavak.flota.service;
 
 import com.kavak.flota.dto.MantenimientoDTO;
+import com.kavak.flota.dto.TransicionEstadoResponseDTO;
 import com.kavak.flota.entity.Mantenimiento;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
@@ -23,6 +24,7 @@ public class MantenimientoService {
     private final MantenimientoRepository mantenimientoRepository;
     private final VehiculoRepository vehiculoRepository;
     private final Mapper mapper;
+    private final TransicionEstadoService transicionEstadoService;
 
     /**
      * Crear un nuevo mantenimiento para un vehículo
@@ -67,17 +69,42 @@ public class MantenimientoService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtener un mantenimiento por ID
+     */
+    @Transactional(readOnly = true)
+    public MantenimientoDTO obtenerPorId(Long id) {
+        return mantenimientoRepository.findById(id)
+                .map(mapper::mantenimientoToDTO)
+                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+    }
+
 
     /**
-     * Actualizar estado de un mantenimiento
+     * Transicionar el estado de un mantenimiento validando las reglas
      */
-    public MantenimientoDTO actualizarEstado(Long id, String nuevoEstado) {
+    public TransicionEstadoResponseDTO transicionarEstado(Long id, String nuevoEstadoStr) {
+
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
 
-        mantenimiento.setEstado(Estado.valueOf(nuevoEstado));
+        String anteriorEstado = mantenimiento.getEstado().toString();
+        Estado nuevoEstado = Estado.valueOf(nuevoEstadoStr);
+
+        // Validar la transición usando el servicio especializado
+        transicionEstadoService.validarTransicion(mantenimiento.getEstado(), nuevoEstado);
+
+        // Si la validación pasó, actualizar el estado
+        mantenimiento.setEstado(nuevoEstado);
         Mantenimiento mantenimientoActualizado = mantenimientoRepository.save(mantenimiento);
-        return mapper.mantenimientoToDTO(mantenimientoActualizado);
+
+        return TransicionEstadoResponseDTO.builder()
+                .mantenimientoId(id)
+                .estadoAnterior(anteriorEstado)
+                .estadoNuevo(nuevoEstadoStr)
+                .mensaje("Transición exitosa de " + anteriorEstado +
+                        " a " + nuevoEstadoStr)
+                .build();
     }
 
     /**

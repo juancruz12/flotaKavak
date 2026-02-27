@@ -1,11 +1,13 @@
 package com.kavak.flota.controller;
 
 import com.kavak.flota.dto.MantenimientoDTO;
+import com.kavak.flota.dto.TransicionEstadoResponseDTO;
 import com.kavak.flota.service.MantenimientoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.util.List;
 
@@ -24,8 +26,8 @@ public class MantenimientoController {
     public ResponseEntity<MantenimientoDTO> crearMantenimiento(
             @RequestParam Long idVehiculo,
             @RequestBody MantenimientoDTO mantenimientoDTO) {
-        MantenimientoDTO mantenimientoCreado = mantenimientoService.crearMantenimiento(idVehiculo, mantenimientoDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(mantenimientoCreado);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                mantenimientoService.crearMantenimiento(idVehiculo, mantenimientoDTO));
     }
 
     /**
@@ -34,20 +36,25 @@ public class MantenimientoController {
      */
     @GetMapping("/vehiculo/{vehiculoId}")
     public ResponseEntity<List<MantenimientoDTO>> obtenerPorVehiculoId(@PathVariable Long vehiculoId) {
-        List<MantenimientoDTO> mantenimientos = mantenimientoService.obtenerPorVehiculoId(vehiculoId);
-        return ResponseEntity.ok(mantenimientos);
+        return ResponseEntity.ok(mantenimientoService.obtenerPorVehiculoId(vehiculoId));
     }
 
     /**
-     * Actualizar estado de un mantenimiento
-     * PUT /api/mantenimientos/{id}/estado
+     * Transicionar el estado de un mantenimiento
+     * PUT /api/mantenimientos/{id}/transicionar?nuevoEstado={estado}
+     *
+     * Estados válidos: PENDIENTE, EN_PROCESO, COMPLETADO, CANCELADO
+     *
+     * Flujo permitido:
+     * - PENDIENTE → EN_PROCESO o CANCELADO
+     * - EN_PROCESO → COMPLETADO o CANCELADO
+     * - COMPLETADO y CANCELADO son estados finales (no permiten transiciones)
      */
-    @PutMapping("/{id}/estado")
-    public ResponseEntity<MantenimientoDTO> actualizarEstado(
+    @PutMapping("/{id}/transicionar")
+    public ResponseEntity<TransicionEstadoResponseDTO> transicionarEstado(
             @PathVariable Long id,
             @RequestParam String nuevoEstado) {
-        MantenimientoDTO mantenimientoActualizado = mantenimientoService.actualizarEstado(id, nuevoEstado);
-        return ResponseEntity.ok(mantenimientoActualizado);
+        return ResponseEntity.ok(mantenimientoService.transicionarEstado(id, nuevoEstado));
     }
 
     /**
