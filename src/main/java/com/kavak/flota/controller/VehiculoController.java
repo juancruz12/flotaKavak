@@ -2,9 +2,12 @@ package com.kavak.flota.controller;
 
 import com.kavak.flota.dto.VehiculoDTO;
 import com.kavak.flota.service.VehiculoService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/vehiculos")
 @RequiredArgsConstructor
+@Validated
 public class VehiculoController {
 
     private final VehiculoService vehiculoService;
@@ -21,7 +25,7 @@ public class VehiculoController {
      * POST /api/vehiculos
      */
     @PostMapping
-    public ResponseEntity<VehiculoDTO> crearVehiculo(@RequestBody VehiculoDTO vehiculoDTO) {
+    public ResponseEntity<VehiculoDTO> crearVehiculo(@Valid @RequestBody VehiculoDTO vehiculoDTO) {
         VehiculoDTO vehiculoCreado = vehiculoService.crearVehiculo(vehiculoDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(vehiculoCreado);
     }
@@ -39,7 +43,7 @@ public class VehiculoController {
             VehiculoDTO vehiculo = vehiculoService.obtenerPorId(id);
             return ResponseEntity.ok(vehiculo);
         } else if (patente != null && !patente.isEmpty()) {
-            VehiculoDTO vehiculo = vehiculoService.obtenerPorPatente(patente);
+            VehiculoDTO vehiculo = vehiculoService.obtenerPorPatente(patente.toUpperCase().trim());
             return ResponseEntity.ok(vehiculo);
         } else {
             throw new IllegalArgumentException("Debe proporcionar 'id' o 'patente' como parámetro");
@@ -68,30 +72,26 @@ public class VehiculoController {
 
     /**
      * Verificar disponibilidad de un vehículo
-     * GET /api/vehiculos/{id}/disponibilidad
+     * GET /api/vehiculos/disponibilidad?vehiculoId={id}
      */
-    @GetMapping("/{id}/disponibilidad")
-    public ResponseEntity<Boolean> verificarDisponibilidad(@PathVariable Long id) {
-        boolean disponible = vehiculoService.verificarDisponibilidad(id);
+    @GetMapping("/disponibilidad")
+    public ResponseEntity<Boolean> verificarDisponibilidad(
+            @RequestParam @Min(value = 1, message = "El ID del vehículo debe ser mayor a 0") Long vehiculoId) {
+        boolean disponible = vehiculoService.verificarDisponibilidad(vehiculoId);
         return ResponseEntity.ok(disponible);
     }
 
     /**
-     * Actualizar kilometraje por ID o patente
+     * Actualizar kilometraje por ID
      * PUT /api/vehiculos/kilometraje?id={id}&nuevoKilometraje={km}
-     * o PUT /api/vehiculos/kilometraje?patente={patente}&nuevoKilometraje={km}
      */
     @PutMapping("/kilometraje")
     public ResponseEntity<VehiculoDTO> actualizarKilometraje(
-            @RequestParam(required = true) Long id,
-            @RequestParam Long nuevoKilometraje) {
+            @RequestParam Long id,
+            @RequestParam @Min(value = 0, message = "El kilometraje no puede ser negativo") Long nuevoKilometraje) {
 
-        if (id != null) {
-            VehiculoDTO vehiculoActualizado = vehiculoService.actualizarKilometraje(id, nuevoKilometraje);
-            return ResponseEntity.ok(vehiculoActualizado);
-        } else {
-            throw new IllegalArgumentException("Debe proporcionar 'id' del vehiculo como parámetro");
-        }
+        VehiculoDTO vehiculoActualizado = vehiculoService.actualizarKilometraje(id, nuevoKilometraje);
+        return ResponseEntity.ok(vehiculoActualizado);
     }
 
     /**

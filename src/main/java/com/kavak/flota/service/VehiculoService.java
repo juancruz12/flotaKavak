@@ -2,6 +2,8 @@ package com.kavak.flota.service;
 
 import com.kavak.flota.dto.VehiculoDTO;
 import com.kavak.flota.entity.Vehiculo;
+import com.kavak.flota.exception.KilometrajeInvalidoException;
+import com.kavak.flota.exception.VehiculoNotFoundException;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.VehiculoRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class VehiculoService {
     /**
      * Crear un nuevo vehículo
      */
+    @Transactional
     public VehiculoDTO crearVehiculo(VehiculoDTO vehiculoDTO) {
         Vehiculo vehiculo = mapper.vehiculoDtoToEntity(vehiculoDTO);
         Vehiculo vehiculoGuardado = vehiculoRepository.save(vehiculo);
@@ -31,32 +34,36 @@ public class VehiculoService {
     /**
      * Obtener vehículo por ID
      */
-    @Transactional(readOnly = true)
     public VehiculoDTO obtenerPorId(Long id) {
         return vehiculoRepository.findById(id)
                 .map(mapper::vehiculoToDto)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con ID: " + id));
+                .orElseThrow(() -> new VehiculoNotFoundException(
+                        "Vehículo con ID " + id + " no encontrado"));
     }
 
     /**
      * Obtener vehículo por patente
      */
-    @Transactional(readOnly = true)
     public VehiculoDTO obtenerPorPatente(String patente) {
         return vehiculoRepository.findByPatente(patente)
                 .map(mapper::vehiculoToDto)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con patente: " + patente));
+                .orElseThrow(() -> new VehiculoNotFoundException(
+                        "Vehículo con patente " + patente + " no encontrado"));
     }
 
     /**
      * Actualizar kilometraje de un vehículo por patente
      */
+    @Transactional
     public VehiculoDTO actualizarKilometraje(Long id, Long nuevoKilometraje) {
         Vehiculo vehiculo = vehiculoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con id: " + id));
+                .orElseThrow(() -> new VehiculoNotFoundException(
+                        "Vehículo con ID " + id + " no encontrado"));
 
         if (nuevoKilometraje < vehiculo.getKilometraje()) {
-            throw new RuntimeException("El nuevo kilometraje no puede ser menor que el actual");
+            throw new KilometrajeInvalidoException(
+                    "El nuevo kilometraje (" + nuevoKilometraje +
+                    ") no puede ser menor que el actual (" + vehiculo.getKilometraje() + ")");
         }
 
         vehiculo.setKilometraje(nuevoKilometraje);
@@ -67,7 +74,6 @@ public class VehiculoService {
     /**
      * Obtener todos los vehículos disponibles (sin mantenimientos activos)
      */
-    @Transactional(readOnly = true)
     public List<VehiculoDTO> obtenerVehiculosDisponibles() {
         return vehiculoRepository.findByDisponibleTrue()
                 .stream()
@@ -78,7 +84,6 @@ public class VehiculoService {
     /**
      * Obtener todos los vehículos no disponibles (con mantenimientos activos)
      */
-    @Transactional(readOnly = true)
     public List<VehiculoDTO> obtenerVehiculosNoDisponibles() {
         return vehiculoRepository.findByDisponibleFalse()
                 .stream()
@@ -89,19 +94,8 @@ public class VehiculoService {
     /**
      * Verificar si un vehículo está disponible por ID
      */
-    @Transactional(readOnly = true)
     public boolean verificarDisponibilidad(Long id) {
         return vehiculoRepository.findById(id)
-                .map(Vehiculo::getDisponible)
-                .orElse(false);
-    }
-
-    /**
-     * Verificar si un vehículo está disponible por patente
-     */
-    @Transactional(readOnly = true)
-    public boolean verificarDisponibilidadPorPatente(String patente) {
-        return vehiculoRepository.findByPatente(patente)
                 .map(Vehiculo::getDisponible)
                 .orElse(false);
     }

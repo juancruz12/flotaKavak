@@ -1,11 +1,14 @@
 package com.kavak.flota.service;
 
+import com.kavak.flota.dto.CostoTotalMantenimientosDTO;
 import com.kavak.flota.dto.MantenimientoDTO;
 import com.kavak.flota.dto.TransicionEstadoResponseDTO;
 import com.kavak.flota.entity.Mantenimiento;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
 import com.kavak.flota.enums.TipoMantenimiento;
+import com.kavak.flota.exception.MantenimientoNotFoundException;
+import com.kavak.flota.exception.VehiculoNotFoundException;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.MantenimientoRepository;
 import com.kavak.flota.repository.VehiculoRepository;
@@ -29,9 +32,11 @@ public class MantenimientoService {
     /**
      * Crear un nuevo mantenimiento para un vehículo
      */
+    @Transactional
     public MantenimientoDTO crearMantenimiento(Long idVehiculo, MantenimientoDTO mantenimientoDTO) {
         Vehiculo vehiculo = vehiculoRepository.findById(idVehiculo)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con id: " + idVehiculo));
+                .orElseThrow(() -> new VehiculoNotFoundException(
+                        "Vehículo con ID " + idVehiculo + " no encontrado"));
 
         Mantenimiento mantenimiento = Mantenimiento.builder()
                 .tipoMantenimiento(TipoMantenimiento.valueOf(mantenimientoDTO.getTipoMantenimiento()))
@@ -55,20 +60,8 @@ public class MantenimientoService {
     /**
      * Obtener todos los mantenimientos de un vehículo por ID
      */
-    @Transactional(readOnly = true)
     public List<MantenimientoDTO> obtenerPorVehiculoId(Long vehiculoId) {
         return mantenimientoRepository.findByVehiculoId(vehiculoId)
-                .stream()
-                .map(mapper::mantenimientoToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Obtener todos los mantenimientos de un vehículo por patente
-     */
-    @Transactional(readOnly = true)
-    public List<MantenimientoDTO> obtenerPorVehiculoPatente(String patente) {
-        return mantenimientoRepository.findByVehiculoPatente(patente)
                 .stream()
                 .map(mapper::mantenimientoToDTO)
                 .collect(Collectors.toList());
@@ -78,7 +71,6 @@ public class MantenimientoService {
      * Obtener todos los mantenimientos activos de un vehículo por ID
      * Mantenimientos activos: PENDIENTE, EN_PROCESO (definidos en Estado.getEstadosActivos())
      */
-    @Transactional(readOnly = true)
     public List<MantenimientoDTO> obtenerMantenimientosActivosPorVehiculo(Long vehiculoId) {
         return mantenimientoRepository.findMantenimientosActivosPorVehiculo(
                         vehiculoId,
@@ -89,37 +81,25 @@ public class MantenimientoService {
     }
 
     /**
-     * Obtener todos los mantenimientos activos de un vehículo por patente
-     * Mantenimientos activos: PENDIENTE, EN_PROCESO (definidos en Estado.getEstadosActivos())
-     */
-    @Transactional(readOnly = true)
-    public List<MantenimientoDTO> obtenerMantenimientosActivosPorPatente(String patente) {
-        return mantenimientoRepository.findMantenimientosActivosPorPatente(
-                        patente,
-                        Estado.getEstadosActivos())
-                .stream()
-                .map(mapper::mantenimientoToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Obtener un mantenimiento por ID
      */
-    @Transactional(readOnly = true)
     public MantenimientoDTO obtenerPorId(Long id) {
         return mantenimientoRepository.findById(id)
                 .map(mapper::mantenimientoToDTO)
-                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+                .orElseThrow(() -> new MantenimientoNotFoundException(
+                        "Mantenimiento con ID " + id + " no encontrado"));
     }
 
 
     /**
      * Transicionar el estado de un mantenimiento validando las reglas
      */
+    @Transactional
     public TransicionEstadoResponseDTO transicionarEstado(Long id, String nuevoEstadoStr, Double costoFinal) {
 
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+                .orElseThrow(() -> new MantenimientoNotFoundException(
+                        "Mantenimiento con ID " + id + " no encontrado"));
 
         String anteriorEstado = mantenimiento.getEstado().toString();
         Estado nuevoEstado = Estado.valueOf(nuevoEstadoStr);
@@ -153,11 +133,14 @@ public class MantenimientoService {
     }
 
     /**
+    /**
      * Eliminar mantenimiento por ID
      */
+    @Transactional
     public void eliminarMantenimiento(Long id) {
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Mantenimiento no encontrado con ID: " + id));
+                .orElseThrow(() -> new MantenimientoNotFoundException(
+                        "Mantenimiento con ID " + id + " no encontrado"));
 
         Vehiculo vehiculo = mantenimiento.getVehiculo();
         mantenimientoRepository.deleteById(id);
@@ -168,4 +151,29 @@ public class MantenimientoService {
             vehiculoRepository.save(vehiculo);
         }
     }
+
+    /**
+     * Calcular costo total de mantenimientos completados de un vehículo
+     * Prioriza costoFinal, si no existe usa costoEstimado
+     */
+    public CostoTotalMantenimientosDTO calcularCostoTotalMantenimientosCompletados(Long vehiculoId) {
+        Vehiculo vehiculo = vehiculoRepository.findById(vehiculoId)
+                .orElseThrow(() -> new VehiculoNotFoundException(
+                        "Vehículo con ID " + vehiculoId + " no encontrado"));
+
+        List<Mantenimiento> mantenimientosCompletados =
+                mantenimientoRepository.findMantenimientosCompletadosPorVehiculo(vehiculoId, Estado.COMPLETADO);
+
+        Double costoTotal = mantenimientosCompletados.stream()
+                .mapToDouble(m -> m.getCostoFinal() != null ? m.getCostoFinal() : m.getCostoEstimado())
+                .sum();
+
+        return CostoTotalMantenimientosDTO.builder()
+                .vehiculoId(vehiculoId)
+                .patente(vehiculo.getPatente())
+                .cantidadMantenimientos(mantenimientosCompletados.size())
+                .costoTotal(costoTotal)
+                .build();
+    }
+
 }

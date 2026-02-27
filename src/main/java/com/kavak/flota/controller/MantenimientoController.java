@@ -2,30 +2,33 @@ package com.kavak.flota.controller;
 
 import com.kavak.flota.dto.MantenimientoDTO;
 import com.kavak.flota.dto.TransicionEstadoResponseDTO;
+import com.kavak.flota.dto.CostoTotalMantenimientosDTO;
 import com.kavak.flota.service.MantenimientoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/mantenimientos")
 @RequiredArgsConstructor
+@Validated
 public class MantenimientoController {
 
     private final MantenimientoService mantenimientoService;
 
     /**
      * Crear un nuevo mantenimiento para un vehículo
-     * POST /api/mantenimientos?vehiculoId={vehiculoId}
+     * POST /api/mantenimientos?idVehiculo={vehiculoId}
      */
     @PostMapping
     public ResponseEntity<MantenimientoDTO> crearMantenimiento(
             @RequestParam Long idVehiculo,
-            @RequestBody MantenimientoDTO mantenimientoDTO) {
+            @Valid @RequestBody MantenimientoDTO mantenimientoDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 mantenimientoService.crearMantenimiento(idVehiculo, mantenimientoDTO));
     }
@@ -67,6 +70,17 @@ public class MantenimientoController {
             @RequestParam String nuevoEstado,
             @RequestParam(required = false) Double costoFinal) {
         return ResponseEntity.ok(mantenimientoService.transicionarEstado(id, nuevoEstado, costoFinal));
+    }
+
+    /**
+     * Calcular costo total de mantenimientos completados de un vehículo por ID
+     * GET /api/mantenimientos/vehiculo/{vehiculoId}/costo-total
+     */
+    @GetMapping("/vehiculo/{vehiculoId}/costo-total")
+    public ResponseEntity<CostoTotalMantenimientosDTO> calcularCostoTotalMantenimientosCompletados(
+            @PathVariable Long vehiculoId) {
+        return ResponseEntity.ok(
+                mantenimientoService.calcularCostoTotalMantenimientosCompletados(vehiculoId));
     }
 
     /**

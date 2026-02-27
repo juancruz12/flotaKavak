@@ -33,5 +33,14 @@ public interface MantenimientoRepository extends JpaRepository<Mantenimiento, Lo
     List<Mantenimiento> findMantenimientosActivosPorPatente(
             @Param("patente") String patente,
             @Param("estadosActivos") List<Estado> estadosActivos);
+
+    /**
+     * Obtener mantenimientos completados de un vehículo
+     * Filtra solo los mantenimientos con estado COMPLETADO
+     */
+    @Query("SELECT m FROM Mantenimiento m WHERE m.vehiculo.id = :vehiculoId " +
+           "AND m.estado = :estadoCompletado")
+    List<Mantenimiento> findMantenimientosCompletadosPorVehiculo(
+            @Param("vehiculoId") Long vehiculoId, @Param("estadoCompletado") Estado estadoCompletado);
 }
 
