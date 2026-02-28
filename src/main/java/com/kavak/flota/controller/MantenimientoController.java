@@ -69,7 +69,8 @@ public class MantenimientoController {
             @PathVariable Long id,
             @RequestParam String nuevoEstado,
             @RequestParam(required = false) Double costoFinal) {
-        return ResponseEntity.ok(mantenimientoService.transicionarEstado(id, nuevoEstado, costoFinal));
+        return ResponseEntity.ok(
+                mantenimientoService.transicionarEstado(id, nuevoEstado.toUpperCase().trim(), costoFinal));
     }
 
     /**
