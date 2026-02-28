@@ -1,0 +1,59 @@
+version: '3.9'
+
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: kavak-db
+    restart: always
+    environment:
+      POSTGRES_USER: kavak_user
+      POSTGRES_PASSWORD: kavak_pass
+      POSTGRES_DB: kavak_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kavak_user -d kavak_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kavak-network
+
+  # Aplicación Spring Boot
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kavak-flota-app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/kavak_db
+      SPRING_DATASOURCE_USERNAME: kavak_user
+      SPRING_DATASOURCE_PASSWORD: kavak_pass
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JACKSON_TIME_ZONE: America/Argentina/Buenos_Aires
+      SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_TIME_ZONE: America/Argentina/Buenos_Aires
+      TZ: America/Argentina/Buenos_Aires
+      # Para cambiar a producción, descomenta la siguiente línea y comenta las anteriores de DDL_AUTO
+      # SPRING_PROFILES_ACTIVE: prod
+    ports:
+      - "8087:8087"
+    networks:
+      - kavak-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  kavak-network:
+    driver: bridge
+
