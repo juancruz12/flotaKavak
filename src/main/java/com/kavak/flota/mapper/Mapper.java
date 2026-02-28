@@ -62,7 +62,7 @@ public class Mapper {
 
         return Vehiculo.builder()
                 .id(dto.getId())
-                .patente(dto.getPatente())
+                .patente(dto.getPatente().toUpperCase().trim())
                 .marca(dto.getMarca())
                 .modelo(dto.getModelo())
                 .anio(dto.getAnio())
