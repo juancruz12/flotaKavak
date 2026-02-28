@@ -3,6 +3,7 @@ package com.kavak.flota.service;
 import com.kavak.flota.dto.VehiculoDTO;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.exception.KilometrajeInvalidoException;
+import com.kavak.flota.exception.PatenteYaExisteException;
 import com.kavak.flota.exception.VehiculoNotFoundException;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.VehiculoRepository;
@@ -23,9 +24,16 @@ public class VehiculoService {
 
     /**
      * Crear un nuevo vehículo
+     * Valida que la patente no exista previamente
      */
     @Transactional
     public VehiculoDTO crearVehiculo(VehiculoDTO vehiculoDTO) {
+        // Validar que la patente no exista
+        if (vehiculoRepository.findByPatente(vehiculoDTO.getPatente()).isPresent()) {
+            throw new PatenteYaExisteException(
+                    "Ya existe un vehículo con la patente: " + vehiculoDTO.getPatente());
+        }
+
         Vehiculo vehiculo = mapper.vehiculoDtoToEntity(vehiculoDTO);
         Vehiculo vehiculoGuardado = vehiculoRepository.save(vehiculo);
         return mapper.vehiculoToDto(vehiculoGuardado);
