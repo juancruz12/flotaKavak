@@ -3,8 +3,23 @@
 Sistema completo de gestión de flota de automóviles desarrollado con **Spring Boot 4.0.3**, **PostgreSQL** y **Docker**.
 
 ---
+## 📋 Criterios y decisiones de diseño
+- ✅ **Busqueda en DB**: Excepto que se indicara explícitamente que fuera necesario realizar la búsqueda por patente, se implementaron las búsquedas a partir del idVehiculo ya que si se hiciera por patente resultaría ser menos eficiente y mas costoso. Incluso agregando el índice a la columna 'patente'.
+---
+- ✅ **Campo 'disponible' EAGER**: Se agregó un campo booleano 'disponible' en la entidad Vehiculo para optimizar las consultas de disponibilidad, evitando cálculos costosos en tiempo real. Ya que de esta forma se actualiza el campo cuando se hace una transicion de sus mantenimientos.
+---
+- ✅ **State Pattern**: Se implementó el State Pattern para manejar las transiciones de estado de los mantenimientos, asegurando que solo se permitan transiciones válidas y centralizando la lógica de negocio, permitiendo asi una fácil escalabilidad y mantenimiento del código.
+---
+- ✅ **Costo total**: Para realizar el calculo del costo total de mantenimientos de un auto, se toman los mantenimientos que están en estado "COMPLETADO" y se prioriza el costoFinal, en caso de no estar presente se utiliza el costoEstimado. Se podria conversar con negocio si hay casos en los cuales un mantenimiento "EN_PROCESO" que fue "CANCELADO" genera gastos, si es asi, también habría que contemplarlos en el calculo del costo total.
+---
+- ✅ **Validaciones**: Se implementaron validaciones exhaustivas tanto a nivel de DTOs utilizando Bean Validation, como a nivel de servicios para asegurar la integridad de los datos y el correcto flujo de la aplicación. Además, se crearon excepciones personalizadas para manejar errores específicos y se implementó un manejo centralizado de errores para proporcionar respuestas estandarizadas y mensajes descriptivos a los clientes de la API.
+---
+- ✅ **Sanitizacion de datos**: Se sanitizo el dato 'patente' tanto en inputs como en outputs para que no sea sensible a mayúsculas/minúsculas/espacios. Permitiendo asi estandarizacion y consistencia de datos.
+---
+- ✅ **Dockerizacion**: Se opto por dockerizar la app permitiendo portabilidad y facilidad de despliegue, evitando problemas de configuración en diferentes entornos. Se incluyó un archivo `docker-compose.yml` para levantar tanto la aplicación como la base de datos PostgreSQL de manera sencilla y rápida.
+---
 
-## ✨ Características
+## ✨ Características y funcionalidades
 
 ### **Gestión de Vehículos**
 - ✅ Crear, leer, actualizar y eliminar vehículos
@@ -59,7 +74,7 @@ Sistema completo de gestión de flota de automóviles desarrollado con **Spring 
 │     VehiculoRepository              │
 │     MantenimientoRepository         │
 ├─────────────────────────────────────┤
-│    PostgreSQL 15 (Docker)            │
+│    PostgreSQL 15            │
 └─────────────────────────────────────┘
 ```
 
@@ -78,32 +93,6 @@ Sistema completo de gestión de flota de automóviles desarrollado con **Spring 
 | **Mockito** | 5.8 | Mocking en tests |
 | **Docker** | 20.10+ | Containerización |
 | **Lombok** | 1.18 | Reducir boilerplate |
-
----
-
-## 🐳 Inicio Rápido con Docker
-
-### **1. Asegúrate que Docker está corriendo**
-```bash
-docker ps
-```
-
-### **2. Levanta los contenedores**
-```bash
-docker-compose up --build
-```
-
-### **3. Accede a la API**
-```
-http://localhost:8087/api/vehiculos
-```
-
-### **4. Detén cuando termines**
-```bash
-docker-compose down
-```
-
-**Para guía completa, ver `QUICK_START.md`**
 
 ---
 
