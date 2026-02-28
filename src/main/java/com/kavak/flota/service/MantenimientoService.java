@@ -50,10 +50,6 @@ public class MantenimientoService {
 
         Mantenimiento mantenimientoGuardado = mantenimientoRepository.save(mantenimiento);
 
-        // ⚡ Actualizar disponibilidad del vehículo y guardarlo explícitamente
-        vehiculo.actualizarDisponibilidad();
-        vehiculoRepository.save(vehiculo);
-
         return mapper.mantenimientoToDTO(mantenimientoGuardado);
     }
 
@@ -115,13 +111,7 @@ public class MantenimientoService {
         }
 
         mantenimientoRepository.save(mantenimiento);
-
-        // ⚡ Actualizar disponibilidad del vehículo y guardarlo explícitamente
-        Vehiculo vehiculo = mantenimiento.getVehiculo();
-        if (vehiculo != null) {
-            vehiculo.actualizarDisponibilidad();
-            vehiculoRepository.save(vehiculo); // Guardar cambio en disponibilidad
-        }
+        mantenimientoRepository.flush();
 
         return TransicionEstadoResponseDTO.builder()
                 .mantenimientoId(id)
@@ -144,12 +134,6 @@ public class MantenimientoService {
 
         Vehiculo vehiculo = mantenimiento.getVehiculo();
         mantenimientoRepository.deleteById(id);
-
-        // ⚡ Actualizar disponibilidad del vehículo después de eliminar el mantenimiento
-        if (vehiculo != null) {
-            vehiculo.actualizarDisponibilidad();
-            vehiculoRepository.save(vehiculo);
-        }
     }
 
     /**
