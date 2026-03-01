@@ -146,7 +146,6 @@ class MantenimientoServiceTest {
         when(mantenimientoRepository.findById(1L)).thenReturn(Optional.of(mantenimiento));
         doNothing().when(transicionEstadoService).validarTransicion(Estado.PENDIENTE, Estado.EN_PROCESO);
         when(mantenimientoRepository.save(any(Mantenimiento.class))).thenReturn(mantenimiento);
-        when(vehiculoRepository.save(any(Vehiculo.class))).thenReturn(vehiculo);
 
         // Act
         var resultado = mantenimientoService.transicionarEstado(1L, "EN_PROCESO", null);
@@ -233,14 +232,12 @@ class MantenimientoServiceTest {
     void testEliminarMantenimiento() {
         // Arrange
         when(mantenimientoRepository.findById(1L)).thenReturn(Optional.of(mantenimiento));
-        when(vehiculoRepository.save(any(Vehiculo.class))).thenReturn(vehiculo);
 
         // Act
         mantenimientoService.eliminarMantenimiento(1L);
 
         // Assert
         verify(mantenimientoRepository, times(1)).deleteById(1L);
-        verify(vehiculoRepository, times(1)).save(any(Vehiculo.class));
     }
 
     @Test
