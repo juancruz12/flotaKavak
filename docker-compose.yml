@@ -56,5 +56,5 @@ volumes:
 
 networks:
   kavak-network:
-    driver: bridge
+    external: true
 

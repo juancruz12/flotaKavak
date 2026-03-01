@@ -22,16 +22,16 @@ public class VehiculoDTO {
     private String patente;
 
     @NotBlank(message = "La marca es obligatoria")
-    @Size(min = 2, max = 50, message = "La marca debe tener entre 2 y 50 caracteres")
+    @Size(min = 1, max = 50, message = "La marca debe tener entre 1 y 50 caracteres")
     private String marca;
 
     @NotBlank(message = "El modelo es obligatorio")
-    @Size(min = 2, max = 50, message = "El modelo debe tener entre 2 y 50 caracteres")
+    @Size(min = 1, max = 50, message = "El modelo debe tener entre 1 y 50 caracteres")
     private String modelo;
 
     @NotNull(message = "El año es obligatorio")
     @Min(value = 1900, message = "El año debe ser mayor o igual a 1900")
-    @Max(value = 2100, message = "El año no puede ser superior a 2100")
+    @Max(value = 2100, message = "El año no puede ser superior a 3000")
     private Integer anio;
 
     @NotNull(message = "El kilometraje es obligatorio")

@@ -1,6 +1,7 @@
 package com.kavak.flota.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kavak.flota.enums.TipoMantenimiento;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,8 +18,6 @@ public class MantenimientoDTO {
     private Long id;
 
     @NotBlank(message = "El tipo de mantenimiento es obligatorio")
-    @Pattern(regexp = "^(CAMBIO_ACEITE|FRENOS|MOTOR|LLANTAS|TRANSMISION|GENERAL)$",
-             message = "Tipo de mantenimiento inválido. Valores permitidos: CAMBIO_ACEITE, FRENOS, MOTOR, LLANTAS, TRANSMISION, GENERAL")
     private String tipoMantenimiento;
 
     @NotBlank(message = "La descripción es obligatoria")
@@ -43,5 +42,7 @@ public class MantenimientoDTO {
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime fechaActualizacion;
+
+    private Long vehiculoId;
 }
 

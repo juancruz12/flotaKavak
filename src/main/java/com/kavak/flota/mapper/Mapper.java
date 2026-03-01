@@ -52,6 +52,7 @@ public class Mapper {
                 .costoFinal(mantenimiento.getCostoFinal())
                 .fechaCreacion(mantenimiento.getFechaCreacion())
                 .fechaActualizacion(mantenimiento.getFechaActualizacion())
+                .vehiculoId(mantenimiento.getVehiculo().getId())
                 .build();
     }
 

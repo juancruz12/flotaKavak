@@ -3,43 +3,72 @@ package com.kavak.flota.service;
 import com.kavak.flota.dto.CostoTotalMantenimientosDTO;
 import com.kavak.flota.dto.MantenimientoDTO;
 import com.kavak.flota.dto.TransicionEstadoResponseDTO;
+import com.kavak.flota.dto.VehiculoDTO;
 import com.kavak.flota.entity.Mantenimiento;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
 import com.kavak.flota.enums.TipoMantenimiento;
 import com.kavak.flota.exception.MantenimientoNotFoundException;
+import com.kavak.flota.exception.TipoMantenimientoInvalidoException;
 import com.kavak.flota.exception.VehiculoNotFoundException;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.MantenimientoRepository;
 import com.kavak.flota.repository.VehiculoRepository;
-import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@EnableAsync
 public class MantenimientoService {
 
     private final MantenimientoRepository mantenimientoRepository;
     private final VehiculoRepository vehiculoRepository;
     private final Mapper mapper;
     private final TransicionEstadoService transicionEstadoService;
+    private final WebClient webClient; // Inyectado desde el constructor
+
+    public MantenimientoService (MantenimientoRepository mantenimientoRepository,
+                               VehiculoRepository vehiculoRepository,
+                               Mapper mapper,
+                               TransicionEstadoService transicionEstadoService) {
+        this.mantenimientoRepository = mantenimientoRepository;
+        this.vehiculoRepository = vehiculoRepository;
+        this.mapper = mapper;
+        this.transicionEstadoService = transicionEstadoService;
+        this.webClient = WebClient.builder()
+                .baseUrl("http://vectorIAKavakApp:8083/vector") // URL del servicio de vectores
+                .build();
+    }
 
     /**
      * Crear un nuevo mantenimiento para un vehículo
      */
     @Transactional
     public MantenimientoDTO crearMantenimiento(Long idVehiculo, MantenimientoDTO mantenimientoDTO) {
+
+        // Validar que el tipo de mantenimiento sea válido
+        TipoMantenimiento tipoMantenimiento;
+        try {
+            tipoMantenimiento = TipoMantenimiento.valueOf(mantenimientoDTO.getTipoMantenimiento());
+        } catch (IllegalArgumentException e) {
+            throw new TipoMantenimientoInvalidoException(
+                    "Tipo de mantenimiento inválido: '" + mantenimientoDTO.getTipoMantenimiento() +
+                    "'. Valores permitidos: " + String.join(", ", TipoMantenimiento.getValoresPermitidos()));
+        }
+
         Vehiculo vehiculo = vehiculoRepository.findById(idVehiculo)
                 .orElseThrow(() -> new VehiculoNotFoundException(
                         "Vehículo con ID " + idVehiculo + " no encontrado"));
 
         Mantenimiento mantenimiento = Mantenimiento.builder()
-                .tipoMantenimiento(TipoMantenimiento.valueOf(mantenimientoDTO.getTipoMantenimiento()))
+                .tipoMantenimiento(tipoMantenimiento)
                 .descripcion(mantenimientoDTO.getDescripcion())
                 .kilometrajeEnMantenimiento(vehiculo.getKilometraje())
                 .estado(Estado.PENDIENTE)
@@ -108,6 +137,9 @@ public class MantenimientoService {
 
         if(nuevoEstado.equals(Estado.COMPLETADO)) {
             mantenimiento.setCostoFinal(costoFinal);
+            VehiculoDTO vehiculoDTO = mapper.vehiculoToDto(mantenimiento.getVehiculo());
+            vehiculoDTO.setMantenimientos(List.of(mapper.mantenimientoToDTO(mantenimiento)));
+            this.enviarMantenimientoAVectorStore(vehiculoDTO);
         }
 
         mantenimientoRepository.save(mantenimiento);
@@ -122,7 +154,21 @@ public class MantenimientoService {
                 .build();
     }
 
-    /**
+    @Async
+    protected void enviarMantenimientoAVectorStore(VehiculoDTO vehiculoDTO) {
+        //TODO Reempalzar por cola de mensajeria para implementar politica de reintentos
+        // y evitar perdida de datos en caso de caida del servicio de vectores
+        webClient.post()
+                .uri("/insertMantenimiento")
+                .bodyValue(vehiculoDTO) // Usamos bodyValue para enviar el DTO directamente
+                .retrieve()
+                .toBodilessEntity()
+                .subscribe(
+                        response -> System.out.println("Enviado a VectorStore con éxito"),
+                        error -> System.err.println("Error enviando a VectorStore: " + error.getMessage())
+                );
+    }
+
     /**
      * Eliminar mantenimiento por ID
      */
