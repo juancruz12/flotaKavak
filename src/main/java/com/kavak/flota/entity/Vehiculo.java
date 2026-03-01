@@ -20,13 +20,13 @@ public class Vehiculo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "patente", unique = true, nullable = false)
+    @Column(name = "patente", unique = true, nullable = false, length = 7)
     private String patente;
 
-    @Column(name = "marca", nullable = false)
+    @Column(name = "marca", nullable = false, length = 50)
     private String marca;
 
-    @Column(name = "modelo", nullable = false)
+    @Column(name = "modelo", nullable = false, length = 50)
     private String modelo;
 
     @Column(name = "anio", nullable = false)

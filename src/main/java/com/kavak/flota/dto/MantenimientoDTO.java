@@ -17,8 +17,6 @@ public class MantenimientoDTO {
     private Long id;
 
     @NotBlank(message = "El tipo de mantenimiento es obligatorio")
-    @Pattern(regexp = "^(CAMBIO_ACEITE|FRENOS|MOTOR|LLANTAS|TRANSMISION|GENERAL)$",
-             message = "Tipo de mantenimiento inválido. Valores permitidos: CAMBIO_ACEITE, FRENOS, MOTOR, LLANTAS, TRANSMISION, GENERAL")
     private String tipoMantenimiento;
 
     @NotBlank(message = "La descripción es obligatoria")
