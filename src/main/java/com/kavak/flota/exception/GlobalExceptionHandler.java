@@ -162,6 +162,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
+    @ExceptionHandler(TipoMantenimientoInvalidoException.class)
+    public ResponseEntity<ErrorResponse> handleTipoMantenimientoInvalidoException(
+            TipoMantenimientoInvalidoException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Bad Request")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+    }
+
     /**
      * Maneja errores cuando falta un @RequestParam requerido
      */

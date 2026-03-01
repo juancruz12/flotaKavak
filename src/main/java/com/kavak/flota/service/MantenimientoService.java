@@ -8,6 +8,7 @@ import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
 import com.kavak.flota.enums.TipoMantenimiento;
 import com.kavak.flota.exception.MantenimientoNotFoundException;
+import com.kavak.flota.exception.TipoMantenimientoInvalidoException;
 import com.kavak.flota.exception.VehiculoNotFoundException;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.MantenimientoRepository;
@@ -34,12 +35,23 @@ public class MantenimientoService {
      */
     @Transactional
     public MantenimientoDTO crearMantenimiento(Long idVehiculo, MantenimientoDTO mantenimientoDTO) {
+
+        // Validar que el tipo de mantenimiento sea válido
+        TipoMantenimiento tipoMantenimiento;
+        try {
+            tipoMantenimiento = TipoMantenimiento.valueOf(mantenimientoDTO.getTipoMantenimiento().toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new TipoMantenimientoInvalidoException(
+                    "Tipo de mantenimiento inválido: '" + mantenimientoDTO.getTipoMantenimiento() +
+                            "'. Valores permitidos: " + String.join(", ", TipoMantenimiento.getValoresPermitidos()));
+        }
+
         Vehiculo vehiculo = vehiculoRepository.findById(idVehiculo)
                 .orElseThrow(() -> new VehiculoNotFoundException(
                         "Vehículo con ID " + idVehiculo + " no encontrado"));
 
         Mantenimiento mantenimiento = Mantenimiento.builder()
-                .tipoMantenimiento(TipoMantenimiento.valueOf(mantenimientoDTO.getTipoMantenimiento()))
+                .tipoMantenimiento(tipoMantenimiento)
                 .descripcion(mantenimientoDTO.getDescripcion())
                 .kilometrajeEnMantenimiento(vehiculo.getKilometraje())
                 .estado(Estado.PENDIENTE)
