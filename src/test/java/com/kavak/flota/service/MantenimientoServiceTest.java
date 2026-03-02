@@ -228,19 +228,6 @@ class MantenimientoServiceTest {
     }
 
     @Test
-    @DisplayName("Eliminar mantenimiento exitosamente")
-    void testEliminarMantenimiento() {
-        // Arrange
-        when(mantenimientoRepository.findById(1L)).thenReturn(Optional.of(mantenimiento));
-
-        // Act
-        mantenimientoService.eliminarMantenimiento(1L);
-
-        // Assert
-        verify(mantenimientoRepository, times(1)).deleteById(1L);
-    }
-
-    @Test
     @DisplayName("Obtener mantenimientos activos por vehículo")
     void testObtenerMantenimientosActivos() {
         // Arrange

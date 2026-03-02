@@ -245,6 +245,25 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja MantenimientoActivoDelTipoException
+     */
+    @ExceptionHandler(MantenimientoActivoDelTipoException.class)
+    public ResponseEntity<ErrorResponse> handleMantenimientoActivoDelTipoException(
+            MantenimientoActivoDelTipoException ex,
+            HttpServletRequest request) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflict")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
+    /**
      * Maneja cualquier otra excepción no contemplada
      */
     @ExceptionHandler(Exception.class)

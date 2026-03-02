@@ -7,6 +7,7 @@ import com.kavak.flota.entity.Mantenimiento;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
 import com.kavak.flota.enums.TipoMantenimiento;
+import com.kavak.flota.exception.MantenimientoActivoDelTipoException;
 import com.kavak.flota.exception.MantenimientoNotFoundException;
 import com.kavak.flota.exception.TipoMantenimientoInvalidoException;
 import com.kavak.flota.exception.VehiculoNotFoundException;
@@ -50,6 +51,17 @@ public class MantenimientoService {
                 .orElseThrow(() -> new VehiculoNotFoundException(
                         "Vehículo con ID " + idVehiculo + " no encontrado"));
 
+        boolean existeMantenimientoActivo = vehiculo.getMantenimientos().stream()
+                .anyMatch(m -> m.getTipoMantenimiento().equals(tipoMantenimiento)
+                        && m.getEstado().esActivo());
+
+        if (existeMantenimientoActivo) {
+            throw new MantenimientoActivoDelTipoException(
+                    "El vehículo ya tiene un mantenimiento activo de tipo '" + tipoMantenimiento +
+                            "'. No se pueden crear múltiples mantenimientos del mismo tipo en estados activos.");
+        }
+
+        vehiculo.setDisponible(false);
         Mantenimiento mantenimiento = Mantenimiento.builder()
                 .tipoMantenimiento(tipoMantenimiento)
                 .descripcion(mantenimientoDTO.getDescripcion())
@@ -122,8 +134,8 @@ public class MantenimientoService {
             mantenimiento.setCostoFinal(costoFinal);
         }
 
+        mantenimiento.getVehiculo().actualizarDisponibilidad();
         mantenimientoRepository.save(mantenimiento);
-        mantenimientoRepository.flush();
 
         return TransicionEstadoResponseDTO.builder()
                 .mantenimientoId(id)
@@ -132,20 +144,6 @@ public class MantenimientoService {
                 .mensaje("Transición exitosa de " + anteriorEstado +
                         " a " + nuevoEstadoStr)
                 .build();
-    }
-
-    /**
-    /**
-     * Eliminar mantenimiento por ID
-     */
-    @Transactional
-    public void eliminarMantenimiento(Long id) {
-        Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
-                .orElseThrow(() -> new MantenimientoNotFoundException(
-                        "Mantenimiento con ID " + id + " no encontrado"));
-
-        Vehiculo vehiculo = mantenimiento.getVehiculo();
-        mantenimientoRepository.deleteById(id);
     }
 
     /**

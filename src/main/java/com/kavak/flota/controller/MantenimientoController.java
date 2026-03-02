@@ -83,15 +83,5 @@ public class MantenimientoController {
         return ResponseEntity.ok(
                 mantenimientoService.calcularCostoTotalMantenimientosCompletados(vehiculoId));
     }
-
-    /**
-     * Eliminar mantenimiento
-     * DELETE /api/mantenimientos/{id}
-     */
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarMantenimiento(@PathVariable Long id) {
-        mantenimientoService.eliminarMantenimiento(id);
-        return ResponseEntity.noContent().build();
-    }
 }
 
