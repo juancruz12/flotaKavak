@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public enum Estado {
     COMPLETADO(new HashSet<>()), // No puede transicionar a ningún estado
@@ -58,6 +59,15 @@ public enum Estado {
      */
     public static List<Estado> getEstadosActivos() {
         return Arrays.asList(PENDIENTE, EN_PROCESO);
+    }
+
+    /**
+     * Obtener lista de todos los valores permitidos como strings
+     */
+    public static List<String> getValoresPermitidos() {
+        return Arrays.stream(Estado.values())
+                .map(Enum::name)
+                .collect(Collectors.toList());
     }
 }
 

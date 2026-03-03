@@ -7,10 +7,7 @@ import com.kavak.flota.entity.Mantenimiento;
 import com.kavak.flota.entity.Vehiculo;
 import com.kavak.flota.enums.Estado;
 import com.kavak.flota.enums.TipoMantenimiento;
-import com.kavak.flota.exception.MantenimientoActivoDelTipoException;
-import com.kavak.flota.exception.MantenimientoNotFoundException;
-import com.kavak.flota.exception.TipoMantenimientoInvalidoException;
-import com.kavak.flota.exception.VehiculoNotFoundException;
+import com.kavak.flota.exception.*;
 import com.kavak.flota.mapper.Mapper;
 import com.kavak.flota.repository.MantenimientoRepository;
 import com.kavak.flota.repository.VehiculoRepository;
@@ -117,12 +114,20 @@ public class MantenimientoService {
     @Transactional
     public TransicionEstadoResponseDTO transicionarEstado(Long id, String nuevoEstadoStr, Double costoFinal) {
 
+        Estado nuevoEstado;
+        try {
+            nuevoEstado = Estado.valueOf(nuevoEstadoStr.toUpperCase().trim());
+        } catch (IllegalArgumentException e) {
+            throw new EstadoInvalidoException(
+                    "Estado de mantenimiento inválido: '" + nuevoEstadoStr +
+                            "'. Valores permitidos: " + String.join(", ", Estado.getValoresPermitidos()));
+        }
+
         Mantenimiento mantenimiento = mantenimientoRepository.findById(id)
                 .orElseThrow(() -> new MantenimientoNotFoundException(
                         "Mantenimiento con ID " + id + " no encontrado"));
 
         String anteriorEstado = mantenimiento.getEstado().toString();
-        Estado nuevoEstado = Estado.valueOf(nuevoEstadoStr);
 
         // Validar la transición usando el servicio especializado
         transicionEstadoService.validarTransicion(mantenimiento.getEstado(), nuevoEstado);
